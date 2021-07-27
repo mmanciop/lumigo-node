@@ -38,13 +38,14 @@ export const HttpSpansAgent = (() => {
 
   const createSessionInstance = () => {
     const baseConfiguration = { timeout: REQUEST_TIMEOUT, maxRedirects: 0, validateStatus };
+    const conf = {
+      ...baseConfiguration,
+      rejectUnauthorized: false,
+    };
     if (isReuseHttpConnection()) {
-      return axios.create({
-        ...baseConfiguration,
-        rejectUnauthorized: false,
-      });
+      return axios.create(conf);
     }
-    return axios.create(baseConfiguration);
+    return axios.create(conf);
   };
 
   const getSessionInstance = () => {
