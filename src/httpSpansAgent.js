@@ -1,12 +1,7 @@
 import * as logger from './logger';
 import { TracerGlobals } from './globals';
-import {
-  getEdgeUrl,
-  getJSONBase64Size,
-  getTracerInfo,
-  isReuseHttpConnection,
-  getConnectionTimeout,
-} from './utils';
+import https from 'https';
+import { getEdgeUrl, getJSONBase64Size, getTracerInfo, getConnectionTimeout } from './utils';
 import axios from 'axios';
 
 const REQUEST_TIMEOUT = 250;
@@ -38,14 +33,12 @@ export const HttpSpansAgent = (() => {
 
   const createSessionInstance = () => {
     const baseConfiguration = { timeout: REQUEST_TIMEOUT, maxRedirects: 0, validateStatus };
-    const conf = {
+    return axios.create({
       ...baseConfiguration,
-      rejectUnauthorized: false,
-    };
-    if (isReuseHttpConnection()) {
-      return axios.create(conf);
-    }
-    return axios.create(conf);
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: false,
+      }),
+    });
   };
 
   const getSessionInstance = () => {

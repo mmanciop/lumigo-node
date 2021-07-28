@@ -25,7 +25,7 @@ describe('HttpSpansAgent', () => {
     });
     expect(requests[0].timeout).toEqual(250);
     expect(requests[0].url).toEqual(url);
-    expect(requests[0].httpsAgent).toBeUndefined();
+    expect(requests[0].httpsAgent).toBeDefined();
   });
 
   test('postSpans - keepalive flag', async () => {
@@ -110,4 +110,10 @@ describe('HttpSpansAgent', () => {
     },
     testTimeout
   );
+
+  // Local test - for sending without certificate
+  // test('TIMI',async () => {
+  //   HttpSpansAgent.initAgent()
+  //   await HttpSpansAgent.postSpans("BLA")
+  // })
 });
