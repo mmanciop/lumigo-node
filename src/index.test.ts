@@ -15,7 +15,6 @@ describe('index', () => {
   const spies = {};
   spies.trace = jest.spyOn(tracer, 'trace');
   spies.setSwitchOff = jest.spyOn(utils, 'setSwitchOff');
-  spies.setVerboseMode = jest.spyOn(utils, 'setVerboseMode');
 
   beforeEach(() => {
     Object.keys(spies).map((x) => spies[x].mockClear());
@@ -25,7 +24,7 @@ describe('index', () => {
     jest.setTimeout(15000);
     const originDirPath = __dirname;
     const dupDirPath = `${originDirPath}Dup'`;
-    const layerPath = `${dupDirPath}/index.js`;
+    const layerPath = `${dupDirPath}/index`;
 
     const { context } = new HandlerInputesBuilder().build();
     const callback = jest.fn();
@@ -266,19 +265,16 @@ describe('index', () => {
     const token = 'DEADBEEF';
     const debug = false;
     const edgeHost = 'zarathustra.com';
-    const verbose = true;
 
-    const lumigo1 = require('./index')({ token, edgeHost, verbose });
+    const lumigo1 = require('./index')({ token, edgeHost });
     expect(lumigo1.trace).toEqual(retVal);
     expect(spies.trace).toHaveBeenCalledWith({
       debug,
       token,
       edgeHost,
       switchOff: false,
-      eventFilter: {},
       stepFunction: false,
     });
-    expect(spies.setVerboseMode).toHaveBeenCalled();
     spies.trace.mockClear();
     spies.trace.mockReturnValueOnce(retVal);
     const lumigo2 = require('./index')({
@@ -291,7 +287,6 @@ describe('index', () => {
       token,
       edgeHost: undefined,
       switchOff: true,
-      eventFilter: {},
       stepFunction: false,
     });
     expect(spies.setSwitchOff).toHaveBeenCalled();
@@ -313,7 +308,6 @@ describe('index', () => {
       debug,
       edgeHost,
       switchOff: false,
-      eventFilter: {},
       stepFunction: false,
     });
   });

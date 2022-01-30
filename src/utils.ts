@@ -145,7 +145,6 @@ export const getAWSEnvironment = (): AwsEnvironment => {
 const TIMEOUT_ENABLE_FLAG = 'LUMIGO_TIMEOUT_TIMER_ENABLED';
 const WARM_FLAG = 'LUMIGO_IS_WARM';
 const WRAPPED_FLAG = 'LUMIGO_IS_WRAPPED';
-const VERBOSE_FLAG = 'LUMIGO_VERBOSE';
 const SEND_ONLY_IF_ERROR_FLAG = 'SEND_ONLY_IF_ERROR';
 const PRUNE_TRACE_OFF_FLAG = 'LUMIGO_PRUNE_TRACE_OFF';
 const STORE_LOGS_FLAG = 'LUMIGO_STORE_LOGS';
@@ -230,8 +229,6 @@ export const getTimeoutMinDuration = () => {
 
 export const isScrubKnownServicesOn = () => validateEnvVar(SCRUB_KNOWN_SERVICES_FLAG);
 
-export const isVerboseMode = () => validateEnvVar(VERBOSE_FLAG);
-
 export const isProvisionConcurrencyInitialization = () =>
   process.env.AWS_LAMBDA_INITIALIZATION_TYPE === 'provisioned-concurrency';
 
@@ -314,8 +311,6 @@ export const setSendOnlyIfErrors = () => (process.env[SEND_ONLY_IF_ERROR_FLAG] =
 export const setPruneTraceOff = () => (process.env[PRUNE_TRACE_OFF_FLAG] = 'TRUE');
 
 export const setStoreLogsOn = () => (process.env[STORE_LOGS_FLAG] = 'TRUE');
-
-export const setVerboseMode = () => (process.env[VERBOSE_FLAG] = 'TRUE');
 
 export const setSwitchOff = () => (process.env['LUMIGO_SWITCH_OFF'] = 'TRUE');
 

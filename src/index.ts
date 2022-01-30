@@ -1,5 +1,5 @@
 import { trace } from './tracer';
-import { safeExecute, setSwitchOff, setVerboseMode, isValidToken } from './utils';
+import { safeExecute, setSwitchOff, isValidToken } from './utils';
 import * as LumigoLogger from './lumigoLogger';
 import { debug } from './logger';
 import { ExecutionTags } from './globals';
@@ -13,12 +13,15 @@ module.exports = function ({
   token,
   debug = false,
   edgeHost,
-  eventFilter = {},
-  verbose = false,
   switchOff = false,
   stepFunction = false,
+}: {
+  token: string;
+  debug?: boolean;
+  edgeHost?: string;
+  switchOff?: boolean;
+  stepFunction?: boolean;
 }) {
-  verbose && setVerboseMode();
   switchOff && setSwitchOff();
   let tokenToValidate = token || process.env.LUMIGO_TRACER_TOKEN;
   if (!isValidToken(tokenToValidate)) {
@@ -35,7 +38,6 @@ module.exports = function ({
       debug,
       edgeHost,
       switchOff,
-      eventFilter,
       stepFunction,
     }),
     addExecutionTag: ExecutionTags.addTag,
@@ -51,3 +53,5 @@ Object.assign(module.exports, {
   warn: LumigoLogger.warn,
   error: LumigoLogger.error,
 });
+
+export default module.exports;

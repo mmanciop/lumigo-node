@@ -172,12 +172,6 @@ describe('utils', () => {
     expect(utils.isScrubKnownServicesOn()).toBe(true);
   });
 
-  test('isVerboseMode', () => {
-    expect(utils.isVerboseMode()).toBe(false);
-    process.env.LUMIGO_VERBOSE = 'TRUE';
-    expect(utils.isVerboseMode()).toBe(true);
-  });
-
   test('isStoreLogs', () => {
     expect(utils.isStoreLogs()).toBe(false);
     process.env.LUMIGO_STORE_LOGS = 'TRUE';
