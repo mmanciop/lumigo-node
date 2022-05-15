@@ -10,42 +10,46 @@ This is [`@lumigo/tracer`](https://), Lumigo's Node.js agent for distributed tra
 
 Supported NodeJS runtimes: 8.10, 10.x, 12.x, 14.x
 
- 
 ## Usage 
 
 The `@lumigo/tracer` package allows you to pursue automated metric gathering through Lambda Layers, automated metric gathering and instrumentation through the Serverless framework, or manual metric creation and implementation.
 
-### With Lambda Layers:
+### Including the tracer through a Lambda layer
 
-* When configuring your Lambda functions, include the appropriate Lambda Layer ARN [from these tables](https://github.com/lumigo-io/lumigo-node/blob/master/layers)
+The tracer is also provided via Lambda layers that can be [included directly in your functions](https://docs.aws.amazon.com/lambda/latest/dg/invocation-layers.html).
+The ARNs of these Lambda layers, one per AWS region, are available [here](https://github.com/lumigo-io/lumigo-node/blob/master/layers).
 
-*Note* - Lambda Layers are an optional feature. If you decide to use this capability, the list of Lambda layers available is available [here.](https://github.com/lumigo-io/lumigo-node/blob/master/layers)
+**Note:** Using the Lambda layer for including the tracer is optional.
 
-### With Serverless framework:
-* To configure the Serverless Framework to work with Lumigo, simply install our plugin: [**serverless-lumigo-plugin**](https://github.com/lumigo-io/serverless-lumigo-plugin/blob/master/README.md)
+### Including the tracer via the Serverless framework
 
-### Manually:
+If your Lambda function uses the [Serverless Framework](https://www.serverless.com/), the tracer is also available as the [`serverless-lumigo-plugin`](https://github.com/lumigo-io/serverless-lumigo-plugin/blob/master/README.md).
+FOr more information on how to install plugins with the Serverless Framework, refer to the [Plugins](https://www.serverless.com/framework/docs/guides/plugins) documentation.
 
-To manually configure Lumigo in your Lambda functions:
+### Manual inclusion
 
-* First, install the `@lumigo/tracer` package using your preferred package manager:
+The tracer delivered over the `@lumigo/tracer` Node.js package, and you can add it to the dependencies of your function as any other package:
 
 ~~~bash
 $ npm i @lumigo/tracer
 # or
 $ yarn add @lumigo/tracer
 ~~~
-    
-* Next, wrap your `handler` in Lumigo's `trace` function (note: replace `YOUR-TOKEN-HERE` with your Lumigo API token):
+
+Next, wrap your `handler` in Lumigo's `trace` function:
+
+#### Javascript
 
 ~~~js
 // javascript
-const lumigo = require('@lumigo/tracer')({ token: 'YOUR-TOKEN-HERE' })
+const lumigo = require('@lumigo/tracer')()
 
 const myHandler = async (event, context, callback) => { ... }
 
 exports.handler = lumigo.trace(myHandler)
 ~~~
+
+#### Typescript
 
 ~~~typescript
 // typescript
@@ -56,8 +60,7 @@ const myHandler = async (event, context, callback) => { ... }
 exports.handler = lumigo({ token: 'YOUR-TOKEN-HERE' }).trace(myHandler)
 ~~~
 
-##### Note:
-For Typescript users, you must add the following to your `tsconfig.json` file:
+You must add the following to your `tsconfig.json` file:
 ~~~json
 {
   ...,
@@ -66,27 +69,38 @@ For Typescript users, you must add the following to your `tsconfig.json` file:
 ~~~
 [read more about it here](https://www.typescriptlang.org/tsconfig#esModuleInterop)
 
-* Your function is now fully instrumented
+### Set the Lumigo token
+
+The tracer needs an authentication token to send data to the Lumigo endpoint by setting `LUMIGO_TRACER_TOKEN` environment variable of your Lambda function; refer to the [Using AWS Lambda environment variables](https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-encryption) documentation for more information.
+Your Lumigo token is available in Settings -> Tracing -> Manual tracing.
+
+We advise you to use the most secure available to you to store secrets such as your `LUMIGO_TRACER_TOKEN`; additionally, AWS provides integrations for AWS Key Management Service that keep the values of your Lambda environment variables secure.
 
 ## Configuration
-`@lumigo/tracer` offers several different configuration options. Pass these to the Lambda function as environment variables:
 
-* `LUMIGO_DEBUG=TRUE` - Enables debug logging
-* `LUMIGO_SECRET_MASKING_REGEX='["regex1", "regex2"]'` - Prevents Lumigo from sending keys that match the supplied regular expressions. All regular expressions are case-insensitive. By default, Lumigo applies the following regular expressions: `[".*pass.*", ".*key.*", ".*secret.*", ".*credential.*", ".*passphrase.*"]`. 
-* `LUMIGO_DOMAINS_SCRUBBER='[".*secret.*"]'` - Prevents Lumigo from collecting both request and response details from a list of domains. This accepts a comma-separated list of regular expressions that is JSON-formatted. By default, the tracer uses `["secretsmanager\..*\.amazonaws\.com", "ssm\..*\.amazonaws\.com", "kms\..*\.amazonaws\.com"]`. **Note** - These defaults are overridden when you define a different list of regular expressions.
-* `LUMIGO_SWITCH_OFF=TRUE` - In the event a critical issue arises, this turns off all actions that Lumigo takes in response to your code. This happens without a deployment, and is picked up on the next function run once the environment variable is present.
+`@lumigo/tracer` offers the following configuration options, to be [set as environment variables to your Lambda function](https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-encryption):
+
+* `LUMIGO_DEBUG=TRUE`: Enables debug logging
+* `LUMIGO_SECRET_MASKING_REGEX='["regex1", "regex2"]'`: Prevents Lumigo from sending keys that match the supplied regular expressions. All regular expressions are case-insensitive. By default, Lumigo applies the following regular expressions: `[".*pass.*", ".*key.*", ".*secret.*", ".*credential.*", ".*passphrase.*"]`. **Note:** Refer to the [Scrubbing limitations](#scrubbing_limitations) section for the limitations that apply to secrets scrubbing.
+* `LUMIGO_DOMAINS_SCRUBBER='[".*secret.*"]'`: Prevents Lumigo from collecting both request and response details from a list of domains. This accepts a comma-separated list of regular expressions that is JSON-formatted. By default, the tracer uses `["secretsmanager\..*\.amazonaws\.com", "ssm\..*\.amazonaws\.com", "kms\..*\.amazonaws\.com"]`. **Note:** These defaults are overridden when you define a different list of regular expressions.
+* `LUMIGO_SWITCH_OFF=TRUE`: In the event a critical issue arises, this turns off all actions that Lumigo takes in response to your code. This happens without a deployment, and is picked up on the next function run once the environment variable is present.
 
 ### Step Functions
 
-If your function is part of a set of step functions, you can add the flag `step_function: true` to the Lumigo tracer import. Alternatively, you can configure the step function using an environment variable `LUMIGO_STEP_FUNCTION=True`. When this is active, Lumigo tracks all states in the step function in a single transaction, easing debugging and observability.
+If your function is part of a set of step functions, the Lumigo tracer can track all states in the step function as a single transaction by adding the flag `step_function: true` to the Lumigo tracer import when using the [manual inclusion](#manual_inclusion):
+
+```js
+const lumigo = require('@lumigo/tracer')({ step_function: true })
 ```
-const lumigo = require('@lumigo/tracer')({ token: 'DEADBEEF', step_function: true })
-```
-Note: the tracer adds the key `"_lumigo"` to the return value of the function. 
+
+Alternatively, you can set the environment variable `LUMIGO_STEP_FUNCTION=True`.
+
+**Note:** the tracer adds the key `"_lumigo"` to the return value of the function. 
 
 If you override the `"Parameters"` configuration, add `"_lumigo.$": "$._lumigo"` to ensure this value is still present.
 
 Below is an example configuration for a Lambda function that is part of a step function that has overridden its parameters:
+
 ```
 "States": {
     "state1": {
@@ -106,33 +120,32 @@ Below is an example configuration for a Lambda function that is part of a step f
 ```
 
 ## Logging Programmatic Errors
-With the tracer configured, simply call `console.log("[LUMIGO_LOG] <YOUR_MESSAGE>");` to cerate custom errors that are visible throughout the platform. This can be used anywhere in your Lambda code, and is included with the `@lumigo/tracer` package.
+
+To add custom errors visible in the Lumigo platform, add the following code to your Function:
+
+```js
+console.log("[LUMIGO_LOG] <YOUR_MESSAGE>");
+```
 
 ## Adding Execution Tags
 You can add execution tags to a function with dynamic values using the parameter `addExecutionTag`.
 
 These tags will be searchable from within the Lumigo platform.
 
-### Adding tags for Manual tracing
-To add a tag to a manual trace statement:
+### Adding execution tags
 
-* Add `const lumigo = require('@lumigo/tracer')({ token: 'YOUR-TOKEN-HERE' })` to your code.
-* Add execution tags by using `lumigo.addExecutionTag('<key>', '<value>');`
+You can add tags to the tracing data collected by the Lumigo tracer as follows:
 
-### Adding tags for Auto tracing
-To add a tag to an automatically-traced function:
+```js
+lumigo.addExecutionTag('<key>', '<value>');
+```
 
-* Add `const lumigo = require('@lumigo/tracer')` to the top of your handler's .js file
-* Use `lumigo.addExecutionTag('<key>', '<value>');` anywhere in your lambda code.
-
-### Execution Tag Limitations:
 Execution tags are subject to the following limitations:
 
 * The maximum number of tags is 50. 
 * Key length must be between 1 and 50.
 * Value length must be between 1 and 70.
 
-### Scrubbing Limitations:
-Secrets scrubbing are subject to the following limitations:
+### Scrubbing Limitations
 
-* support only json data secrets scrubbing
+Secrets scrubbing is supported only for JSON-formatted data.
